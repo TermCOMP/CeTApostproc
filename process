@@ -1,0 +1,10 @@
+#!/bin/bash
+
+result=`sed 1q "$1"`
+sed -n '1!p' "$1" > "$3/proof"
+
+certout=`/usr/bin/time -f %U -o "$3/certtime" ./ceta.exe "$3/proof" "$2" 2> $3/certerr`
+
+echo result=$result
+echo certification-result=$certout
+echo certification-time=`cat "$3/certtime"`
