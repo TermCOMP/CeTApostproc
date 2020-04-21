@@ -2,6 +2,8 @@
 
 prooffile=`mktemp`
 claimfile=`mktemp`
+outfile=`mktemp`
+errfile=`mktemp`
 
 result=`sed 1q "$1"`
 sed -n '1!p' "$1" > "$prooffile"
@@ -16,15 +18,13 @@ fi
 
 if [ "$claim" != "" ]; then
 	echo $claim > "$claimfile"
-	cert=`./ceta "$2" "$claimfile" "$prooffile" 2> /dev/null`
+	./ceta "$2" "$claimfile" "$prooffile" > "$outfile" 2> "$errfile"
+	cert=`cat "$outfile"`
 	echo starexec-result=$cert $result
-	echo result=$result
 	echo certification-result=$cert
+       	echo certification-err=`cat "$errfile"`
 else
 	echo starexec-result=$result
-	echo result=$result
 fi
 
-
-rm "$prooffile"
-rm "$claimfile"
+rm "$prooffile" "$claimfile" "$outfile" "$errfile"
