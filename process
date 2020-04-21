@@ -1,22 +1,30 @@
 #!/bin/bash
 
+prooffile=`mktemp`
+claimfile=`mktemp`
+
 result=`sed 1q "$1"`
-sed -n '1!p' "$1" > "$3/proof"
+sed -n '1!p' "$1" > "$prooffile"
 
 if [ "$result" = "YES" ]; then
 	claim='<terminating/>'
 elif [ "$result" = "NO" ]; then
 	claim='<nonterminating/>'
 else
-	claim=''
+	claim=
 fi
 
 if [ "$claim" != "" ]; then
-	echo $claim > "$3/claim"
-	certout=`/usr/bin/time --quiet -f %U -o "$3/certtime" ./ceta "$2" "$3/claim" "$3/proof" 2> $3/certerr`
-	certtime=`cat "$3/certtime"`
+	echo $claim > "$claimfile"
+	cert=`./ceta "$2" "$claimfile" "$prooffile" 2> /dev/null`
+	echo starexec-result=$cert $result
+	echo result=$result
+	echo certification-result=$cert
+else
+	echo starexec-result=$result
+	echo result=$result
 fi
 
-echo result=$result
-echo certification-result=$certout
-echo certification-time=$certtime
+
+rm "$prooffile"
+rm "$claimfile"
