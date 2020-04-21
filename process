@@ -21,10 +21,12 @@ if [ "$claim" != "" ]; then
 	./ceta "$2" "$claimfile" "$prooffile" > "$outfile" 2> "$errfile"
 	cert=`cat "$outfile"`
 	echo starexec-result=$cert $result
+	echo bare-result=$result
 	echo certification-result=$cert
        	echo certification-err=`cat "$errfile"`
 else
 	echo starexec-result=$result
+	echo bare-result=$result
 fi
 
 rm "$prooffile" "$claimfile" "$outfile" "$errfile"
