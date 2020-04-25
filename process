@@ -1,7 +1,6 @@
 #!/bin/bash
 
 result=`sed 1q "$1"`
-sed -n '1!p' "$1" > "$prooffile"
 
 if [ "$result" = "YES" ]; then
 	claim='<terminating/>'
@@ -12,18 +11,18 @@ else
 fi
 
 if [ "$claim" != "" -a -f "$2/cpf.xml" ]; then
-	prooffile=`mktemp`
 	claimfile=`mktemp`
 	errfile=`mktemp`
 	timefile=`mktemp`
 	echo $claim > "$claimfile"
-	cert=`/usr/bin/time --quiet -o "$certtimefile" -f %U ./ceta "$2" "$claimfile" "$prooffile" > "$outfile" 2> "$errfile"`
+	cert=`/usr/bin/time --quiet -o "$certtimefile" -f %U ./ceta "$2" "$claimfile" "$2/cpf.xml" > "$outfile" 2> "$errfile"`
 	echo starexec-result=$cert $result
 	echo bare-result=$result
 	echo certification-result=$cert
     echo certification-err=`cat "$errfile"`
 	echo certification-time=`cat "$timefile"`
 	rm "$prooffile" "$claimfile" "$errfile" "$timefile"
+	cat "$2/cpf.xml"
 else
 	echo starexec-result=$result
 	echo bare-result=$result
