@@ -14,15 +14,17 @@ fi
 if [ "$claim" != "" -a -f "$2/cpf.xml" ]; then
 	prooffile=`mktemp`
 	claimfile=`mktemp`
-	certtimefile=`mktemp`
+	errfile=`mktemp`
+	timefile=`mktemp`
 	echo $claim > "$claimfile"
-	certout=`/usr/bin/time --quiet -o "$certtimefile" -f %U ./ceta "$2" "$claimfile" "$prooffile" 2> /dev/null`
-	certtime=`cat $certtimefile`
+	cert=`/usr/bin/time --quiet -o "$certtimefile" -f %U ./ceta "$2" "$claimfile" "$prooffile" > "$outfile" 2> "$errfile"`
+	echo starexec-result=$cert $result
+	echo bare-result=$result
+	echo certification-result=$cert
+    echo certification-err=`cat "$errfile"`
+	echo certification-time=`cat "$timefile"`
+	rm "$prooffile" "$claimfile" "$errfile" "$timefile"
+else
+	echo starexec-result=$result
+	echo bare-result=$result
 fi
-
-echo starexec-result=$result
-echo result=$result
-echo certification-result=$certout
-echo certification-time=$certtime
-
-rm "$prooffile" "$claimfile" "$certimefile"
