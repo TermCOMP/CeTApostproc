@@ -4,15 +4,12 @@ result=`sed 1q "$1"`
 
 sed -n '1!p' -i "$1"
 
-if [[ "$result" == "CERTIFIED "* ]]; then
-	result=${result#CERTIFIED }
-	if [ "$result" = "YES" ]; then
-		claim='<terminating/>'
-	elif ["$result" = "NO" ]; then
-		claim='<nonterminating/>'
-	else
-		claim=
-	fi
+if [ "$result" = "YES" ]; then
+	claim='<terminating/>'
+elif ["$result" = "NO" ]; then
+	claim='<nonterminating/>'
+else
+	claim=
 fi
 
 echo bare-result=$result
