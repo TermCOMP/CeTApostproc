@@ -6,7 +6,7 @@ sed -n '1!p' -i "$1"
 
 if [ "$result" = "YES" ]; then
 	claim='<terminating/>'
-elif ["$result" = "NO" ]; then
+elif [ "$result" = "NO" ]; then
 	claim='<nonterminating/>'
 else
 	claim=
