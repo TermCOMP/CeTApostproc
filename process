@@ -1,30 +1,41 @@
 #!/bin/bash
+# This is for BenchExec
 
-result=`sed 1q "$1"`
+stdoutfile=`mktemp`
 
-sed -n '1!p' -i "$1"
+sed '1,/^-----*$/d' "$1" | sed '1,2d' > "$stdoutfile"
+
+result=`sed 1q "$stdoutfile"`
+
+regex="WORST_CASE\(\?,O\((1|n\^([0-9]+))\)\)"
 
 if [ "$result" = "YES" ]; then
 	claim='<terminating/>'
 elif [ "$result" = "NO" ]; then
 	claim='<nonterminating/>'
+elif [[ $result =~ $regex ]]; then
+	if [ ${BASH_REMATCH[1]} = 1 ]; then
+		updeg=0
+	else
+		updeg=${BASH_REMATCH[2]}
+	fi
+	claim='<terminating><upperbound><polynomial degree="'$updeg'"/></upperbound></terminating>'
 else
 	claim=
 fi
 
-echo bare-result=$result
+echo starexec-result=$result
 
 if [ -n "$claim" ]; then
+	prooffile=`mktemp`
 	claimfile=`mktemp`
 	errfile=`mktemp`
 	timefile=`mktemp`
+	sed '1d' $stdoutfile > $prooffile
 	echo $claim > "$claimfile"
-	cert=`/usr/bin/time -o "$timefile" -f %U ./ceta "$2" "$claimfile" "$1" 2> "$errfile"`
-	echo starexec-result=$cert $result
+	cert=`/usr/bin/time -o "$timefile" -f %U ./ceta "$2" "$claimfile" "$prooffile" 2> "$errfile"`
 	echo certification-result=$cert
 	echo certification-err=`cat "$errfile"`
 	echo certification-time=`cat "$timefile"`
-	rm "$claimfile" "$errfile" "$timefile"
-else
-	echo starexec-result=$result
+	rm "$stdoutfile" "$prooffile" "$claimfile" "$errfile" "$timefile"
 fi
