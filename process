@@ -1,41 +1,41 @@
 #!/bin/bash
 # This is for BenchExec
 
+# innermost, outermost, or nothing (for full rewriting)
+strategy="innermost"
+# SN, RC, or DC
+proerpty="SN"
+
 stdoutfile=`mktemp`
 
 sed '1,/^-----*$/d' "$1" | sed '1,2d' > "$stdoutfile"
 
 result=`sed 1q "$stdoutfile"`
 
-regex="WORST_CASE\(\?,O\((1|n\^([0-9]+))\)\)"
-
-if [ "$result" = "YES" ]; then
-	claim='<terminating/>'
-elif [ "$result" = "NO" ]; then
-	claim='<nonterminating/>'
-elif [[ $result =~ $regex ]]; then
-	if [ ${BASH_REMATCH[1]} = 1 ]; then
-		updeg=0
-	else
-		updeg=${BASH_REMATCH[2]}
-	fi
-	claim='<terminating><upperbound><polynomial degree="'$updeg'"/></upperbound></terminating>'
-else
-	claim=
-fi
+regex="YES|NO|AST|SAST|PAST|WORST_CASE\((\?|NON_POLY|Omega\(n\^([0-9]+)\)),(\?|POLY|O\((1|n\^([0-9]+))\))\)"
 
 echo starexec-result=$result
 
-if [ -n "$claim" ]; then
-	prooffile=`mktemp`
-	claimfile=`mktemp`
-	errfile=`mktemp`
+if [[ "$result" =~ $regex ]]; then
+	cpfinputfile=`mktemp`
+	cpf2file=`mktemp`
+	cpf3file=`mktemp`
+	inputconversionerrfile=`mktemp`
+	proofconversionerrfile=`mktemp`
+	certerrfile=`mktemp`
 	timefile=`mktemp`
-	sed '1d' $stdoutfile > $prooffile
-	echo $claim > "$claimfile"
-	cert=`/usr/bin/time -o "$timefile" -f %U ./ceta "$2" "$claimfile" "$prooffile" 2> "$errfile"`
+	sed '1d' $stdoutfile > $cpf2file
+	./cpf2_to_3.sh $cpf2file > $cpf3file 2> $proofconversionerrfile
+	if [ -n "$strategy" ]; then
+	    ./trs-conversion --from ari --to cpf3 --strategy "$strategy" --mode termcomp "$2" > $cpfinputfile 2> $inputconversionerrfile
+	else
+	    ./trs-conversion --from ari --to cpf3 --mode termcomp "$2" > $cpfinputfile 2> $inputconversionerrfile
+	fi
+	cert=`/usr/bin/time -o "$timefile" -f %U ./ceta --inputf "$cpfinputfile" --answer "$result" --property "$property" "$cpf3file" 2> "$certerrfile"`
 	echo certification-result=$cert
-	echo certification-err=`cat "$errfile"`
+	echo inputconversion-err=`cat "$inputconversionerrfile"`
+	echo proofconversion-err=`cat "$proofconversionerrfile"`
+	echo certification-err=`cat "$certerrfile"`
 	echo certification-time=`cat "$timefile"`
-	rm "$stdoutfile" "$prooffile" "$claimfile" "$errfile" "$timefile"
+	rm "$stdoutfile" "$cpfinputfile" "$cpf2file" "$cpf3file" "$certerrfile" "$inputconversionerrfile" "$proofconversionerrfile" "$timefile"
 fi
