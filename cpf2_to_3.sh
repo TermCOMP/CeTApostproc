@@ -4,4 +4,4 @@
 
 DIR=$(dirname "$(readlink -f "$0")")
 
-${DIR}/cpf2_to_3_phase_1 $* | xsltproc --huge --maxdepth 100000 ${DIR}/cpf2_to_3.xsl - 
+${DIR}/cpf2_to_3_phase_1 $* | ./xsltproc --huge --maxdepth 100000 ${DIR}/cpf2_to_3.xsl - 

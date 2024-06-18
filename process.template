@@ -2,13 +2,15 @@
 # This is for BenchExec
 
 # innermost, outermost, or nothing (for full rewriting)
-strategy="innermost"
+strategy=STRATEGY
 # SN, RC, or DC
-proerpty="SN"
+property=PROPERTY
 
 stdoutfile=`mktemp`
 
-sed '1,/^-----*$/d' "$1" | sed '1,2d' > "$stdoutfile"
+# first sed-ivocation removes the last line of the file, which is EOF
+# second sed-invocation removes the time stamps
+sed '$ d' $1 | sed 's/^[^\t]*\t//g' > "$stdoutfile"
 
 result=`sed 1q "$stdoutfile"`
 
